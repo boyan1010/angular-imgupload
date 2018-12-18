@@ -1,0 +1,69 @@
+  .wrap {
+
+    overflow: hidden;
+
+    div {
+      position: relative;
+      float: left;
+      margin: 12px;
+      img {
+        width: 80px;
+        height: 80px;
+      }
+      .delete {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 20px;
+        height: 20px;
+        transform: translate(50%, -50%);
+        background-image: url(../../../assets/imgs/delete.svg);
+        background-size: cover;
+      }
+      .first {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        font-size: 0.6rem;
+        text-align: center;
+        background-color: rgba(255, 0, 0, 0.6);
+      }
+    }
+  
+    .add {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border: 2px dashed #ccc;
+      margin: 12px;
+      float: left;
+      &:before {
+        position: absolute;
+        content: '';
+        display: inline-block;
+        width: 30px;
+        background: #ccc;
+        border: 2px solid #ccc;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      &:after {
+        position: absolute;
+        content: '';
+        display: inline-block;
+        height: 30px;
+        background: #ccc;
+        border: 2px solid #ccc;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .tip {
+      color: red;
+    }
+    
+  }

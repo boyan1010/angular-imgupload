@@ -1,0 +1,10 @@
+<div class="wrap">
+  <div *ngFor="let item of uploadImg;let i = index">
+    <img src={{item.src}}>
+    <span class="first" *ngIf="item.first">封面图</span>
+    <span class="delete" (click)="delete(i)"></span>
+  </div>
+  <span class="add" *ngIf="!(uploadImg?.length >= max)" (click)="add()">
+  </span>
+</div>
+<ng-content></ng-content>
