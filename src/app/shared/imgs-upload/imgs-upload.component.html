@@ -4,9 +4,9 @@
     <span class="first" *ngIf="item.first">封面图</span>
     <span class="delete" (click)="delete(i)"></span>
   </div>
-  <!-- <span class="add" *ngIf="!(uploadImg?.length >= max)" (click)="add()"> -->
-  <span class="add">
+  <span class="add" *ngIf="!(uploadImg?.length >= max)" (click)="add()"></span>
+  <!-- <span class="add">
     <input type="file" name="file" id="file" (change)="selectPic($event)">
-  </span>  
+  </span>   -->
 </div>
 <ng-content></ng-content>
