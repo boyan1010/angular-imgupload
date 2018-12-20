@@ -4,9 +4,10 @@
     <span class="first" *ngIf="item.first">封面图</span>
     <span class="delete" (click)="delete(i)"></span>
   </div>
-  <span class="add" *ngIf="!(uploadImg?.length >= max)" (click)="add()"></span>
-  <!-- <span class="add">
-    <input type="file" name="file" id="file" (change)="selectPic($event)">
-  </span>   -->
+  <!-- <span class="add" *ngIf="!(uploadImg?.length >= max)" (click)="add()"></span> -->
+  <span class="add" *ngIf="!(uploadImg?.length >= max)">
+    <input type="file" accept="image/*" name="file" id="file" (change)="selectPic($event)" multiple>
+  </span>  
 </div>
+<h3>您还可以选择<span style="color: red">{{max - uploadImg.length}}</span>张</h3>
 <ng-content></ng-content>

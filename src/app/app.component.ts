@@ -22,13 +22,13 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    setTimeout(() => {
-      console.log('setTimeout');
+    // setTimeout(() => {
+    //   console.log('setTimeout');
 
-      this.imgs.push({
-        src: 'assets/imgs/angular.svg'
-      });
-      this.myForm.get('productImgs').setValue(this.imgs);
-    }, 5000);
+    //   this.imgs.push({
+    //     src: 'assets/imgs/angular.svg'
+    //   });
+    //   this.myForm.get('productImgs').setValue(this.imgs);
+    // }, 5000);
   }
 }

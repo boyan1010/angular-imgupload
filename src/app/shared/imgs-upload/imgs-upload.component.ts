@@ -1,6 +1,9 @@
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, NG_VALIDATORS, Validator } from '@angular/forms';
-import { Component, Input, forwardRef, OnInit } from '@angular/core';
+import { Component, Input, forwardRef, OnInit, AfterViewInit } from '@angular/core';
 import { Observable } from 'rxjs';
+import { isImage, compress, emit } from '../../utils/img.util';
+import { Renderer2, ElementRef, ViewContainerRef
+} from '@angular/core';
 @Component({
   selector: 'app-imgs-upload',
   templateUrl: './imgs-upload.component.html',
@@ -15,14 +18,16 @@ import { Observable } from 'rxjs';
     multi: true
   }]
 })
-export class ImgsUploadComponent implements ControlValueAccessor, OnInit {
+export class ImgsUploadComponent implements ControlValueAccessor, OnInit, AfterViewInit{
   @Input() items: any;
   @Input() max = 1;
   uploadImg = [];
   imgs;
   private imgFileInfo = {};
   private propagateChange = (_: any) => {};
-  constructor() {
+
+  constructor(private el: ElementRef, private render2: Renderer2, private viewRef: ViewContainerRef
+    ) {
     // 模拟的数据
     this.imgs = [
       {
@@ -49,6 +54,13 @@ export class ImgsUploadComponent implements ControlValueAccessor, OnInit {
 
   ngOnInit(): void {
     this.uploadImg = this.uploadImg.concat(this.items ? this.items : this.imgs);
+  }
+
+  ngAfterViewInit(): void {
+    emit.subscribe((url) => {
+      console.log(url);
+      this.render(url);
+    });
   }
 
 
@@ -79,21 +91,19 @@ export class ImgsUploadComponent implements ControlValueAccessor, OnInit {
 
   }
 
-  add() {
+  render(url) {
     if (this.uploadImg.length >= this.max) {
       console.log(this);
       return;
     }
-    this.upload().then((value: any) => {
-      this.uploadImg.push({src: value});
-      this.uploadImg.length === 1 ? this.setFirst() : '';
-      this.propagateChange(this.uploadImg);
-    });
+    this.uploadImg.push({src: url});
+    this.uploadImg.length === 1 ? this.setFirst() : '';
+    this.propagateChange(this.uploadImg);
   }
 
   validate(control: FormControl): {[key: string]: any} {
     // 传入1-5张图片
-    let length = this.uploadImg.length;
+    const length = this.uploadImg.length;
     if ( length > this.max) {
       return {
         imgsError: `您已选择${length}张图片，至多选择${this.max}张图片`
@@ -129,156 +139,69 @@ export class ImgsUploadComponent implements ControlValueAccessor, OnInit {
 
 
   selectPic(ev: Event) {
-    console.log(ev);
+    
+    console.log(ev.target['files']);
     const file = ev.target['files'][0];
-    console.log(file);
     const maxSize = 1024 * 1024 * 10; // 设置为10 M
+    console.log(file);
     // 检查文件类型
-    if(['jpeg', 'png', 'gif', 'jpg'].indexOf(file.type.split("/")[1]) < 0) {
+    if (!isImage(file.type.split('/')[1])) {
+      console.log('error');
       // 报错
-      return false;
+      throw new Error('该文件不是图片');
     }
-
     // 文件大小限制
-    if(file.size > maxSize) {
-      return false;
+    if (file.size > maxSize) {
+      throw new Error('文件太大');
     }
-    // 将file转换成dataUrl
-    this.transformFileToDataUrl(file).then(({dataURL, isComperss}) => {
-      return this.compressImg(dataURL, isComperss);
-    }).then((dataURL) => {
-      return this.processToBlob(dataURL);
-    }).then((formData) => {
-      this.uploadData(formData);
+    this.imgFileInfo['type'] = file.type;
+    this.imgFileInfo['size'] = file.size;
+    this.imgFileInfo['name'] = file.name;
+    this.imgFileInfo['lastModifiedDate '] = file.lastModifiedDate;
+    compress.call(file, file).then((result) => {
+      this.uploadData(result);
     }).catch((err) => {
       console.log(err);
     });
+
+    // 将file转换成dataUrl
+    // transformFileToDataUrl(file).then(({dataURL, isComperss}) => {
+    //   return compressImg(dataURL, isComperss, file.type);
+    // }).then((dataURL) => {
+    //   return processToBlob(dataURL, this.imgFileInfo);
+    // }).then((formData) => {
+    //   this.uploadData(formData);
+    // }).catch((err) => {
+    //   console.log(err);
+    // });
   }
 
   uploadData(formData) {
     // 这里用ajax发送，我这里就是联系一下原生的ajax。。。请忽略
-    const xhr = new XMLHttpRequest;
-    xhr.upload.addEventListener('progress', (e) => {
-      console.log(e.loaded / e.total);
-    });
+    // const xhr = new XMLHttpRequest;
+    // xhr.upload.addEventListener('progress', (e) => {
+    //   console.log(e.loaded / e.total);
+    // });
 
-    xhr.addEventListener('error', () => {
-      console.log('error');
-    });
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState == 4) {
-        const result = JSON.stringify(xhr.responseText);
-        if(xhr.status == 200) {
-          console.log('succes');
-        }else {
-          // shibai
-        }
-      }
-    }
-    xhr.open('POST', '/url', true);
-    xhr.send(formData);
+    // xhr.addEventListener('error', () => {
+    //   console.log('error');
+    // });
+    // xhr.onreadystatechange = () => {
+    //   if (xhr.readyState === 4) {
+    //     const result = JSON.stringify(xhr.responseText);
+    //     if (xhr.status === 200) {
+    //       // success
+    //     } else {
+    //       // fail
+    //     }
+    //   }
+    // };
+    // xhr.open('POST', '/url', true);
+    // xhr.send(formData);
     setTimeout(() => {
       console.log('success');
-      
-    }, 2000);
+    }, 500);
   }
 
-  compressImg(dataURL: string, isCompress: boolean = false) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.src = dataURL;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        let compressedDataUrl;
-
-        if(isCompress){
-            compressedDataUrl = canvas.toDataURL(this.imgFileInfo['type'], 0.2);
-        } else {
-            compressedDataUrl = canvas.toDataURL(this.imgFileInfo['type'], 1);
-        }
-        console.log(compressedDataUrl);
-        resolve(compressedDataUrl);
-      };
-      img.onerror = (err) => {
-        reject(err);
-      }
-    });
-      
-      
-    
-  }
-
-  transformFileToDataUrl(file) {
-    return new Promise((resolve, reject) => {
-      const compassMaxSize = 200 * 1024;
-    
-      this.imgFileInfo['type'] = file.type;
-      this.imgFileInfo['size'] =file.size;
-      this.imgFileInfo['name'] = file.name;
-      this.imgFileInfo['lastModifiedDate ']= file.lastModifiedDate;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target['result'];
-        let isComperss = result.length < compassMaxSize ? false : true;
-        resolve({dataURL: result, isCompress: isComperss});
-      };
-      reader.onerror = (err) => {
-        reject(err);
-      }
-      reader.readAsDataURL(file);
-    });
-    
-  } 
-
-  processToBlob(dataURL) {
-    // 这里使用二进制方式处理dataUrl
-    return new Promise((resolve) => {
-      const binaryString = window.atob(dataURL.split(',')[1]);
-      const arrayBuffer = new ArrayBuffer(binaryString.length);
-      const intArray = new Uint8Array(arrayBuffer);
-      const imgFile = this.imgFileInfo;
-
-      for (let i = 0, j = binaryString.length; i < j; i++) {
-          intArray[i] = binaryString.charCodeAt(i);
-      }
-
-      const data = [intArray];
-      console.log(data);
-
-      let blob;
-
-      blob = new Blob(data, { type: imgFile['type'] });
-      
-
-      // blob 转file
-      const fileOfBlob = new File([blob], imgFile['name']);
-      const formData = new FormData();
-      // type
-      formData.append('type', imgFile['type']);
-      // size
-      formData.append('size', '' + fileOfBlob.size);
-      // name
-      formData.append('name', imgFile['name']);
-      // lastModifiedDate
-      formData.append('lastModifiedDate', imgFile['lastModifiedDate']);
-      // append 文件
-      formData.append('file', blob);
-      resolve(formData);
-
-    });
-    
-
-   
-    
-  }
-
-  
 
 }
