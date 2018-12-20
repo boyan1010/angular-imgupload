@@ -1,28 +1,31 @@
-工作时，公司内有几个app经常会用到图片上传的功能，而且经常是上传很多张，就类似于咸鱼的产品发布。
-学习前端时间很短，对组件化也没有什么概念，最近在学习angular的表单，就自定义了一个表单控件来练习，代码写的比较乱。
+```
+# clone the repo
+git clone https://github.com/fenglanzhan/angular-components.git
 
-一般情况下，这个组件会被放到form标签中使用，这里有自定义验证器，你可以自己修改测验。
-输入属性：max指最大可选择的图片数量，items指初始化时的数据，传入该表单组件
+# change into the repo directory
+cd angular-components
+
+# install
+npm install
+
+# run
+ng serve
+```
 
 
+
+公司内有几个app经常会用到图片上传的功能，类似于咸鱼的产品发布。
 
 ## 图片上传压缩功能
 
-前面主要是对自定义表单控件的封装，主要是练习响应式表单。
-
-1. 这里主要是对图片压缩功能的实现，因为没有搭建服务器，暂时先不处理上传的功能，直接用setTimeout模拟一下。
-2. 之前图片选择是基于ionic native的插件实现的，这里使用input[type='file']来模拟的
-
-这里也是参考网上的一些图片上传方法的总结，一些原理性的东西我还没有搞清楚。
-
-关于图片上传，有一些基础知识在这里整理一下。
+关于图片，有一些基础知识在这里整理一下。
 
 1. FormData对象：可以将数据以键值对的形式，通过ajax请求发送给服务器，是常见的移动端上传方式。在移动端兼容性非常不错。
 2. base64格式：也就是用一段字符串描述二进制数据
 3. Blob对象：一个二进制对象，原生支持，XHR level2支持Blob对象
 4. FileReader对象：可以将本地文件转换成base64格式的dataUrl；可以使用File或者Blob对象指定要读取的文件或数据
 
-图片压缩是将图片用canvas画出来，使用canvas.toDataUrl方法将图片转化成base64格式
+图片压缩的实现是将图片用canvas画出来，使用canvas.toDataUrl方法将图片转化成base64格式，利用此方法设置导出图像的质量进行压缩
 
 1. 使用input获取文件file
 2. 将file转换成dataUrl，即base64格式
@@ -33,15 +36,17 @@
 
 
 
-备注：在使用promise来实现异步回调时，发现了一个Promise的坑，异步代码的运行时错误无法被自动 reject 进而被 catch 捕获，而是直接报错。。。
-
- js 的事件队列中，Promise 的 catch 会在 setTimeout 回调之前执行；但是若异步操作抛出错误的回调是在 Promise 的 catch 之前执行的，其实还是可以被 catch 所捕获到的，比如 Promise 的 then 方法所抛出的错误
+在移动端，图库和拍照选择图片是基于ionic native的插件实现的，直接转化成base64格式的图片
 
 
 
-一旦 Promise 对象已经 resolve，其后的运行时错误将被忽略：
+一个Promise的坑：测试时，发现在使用promise来实现异步回调时，异步代码的运行时错误无法被自动 reject 进而被 catch 捕获，而是直接报错
+
+不过这里用了img的`onerror`事件监听，还是可以避免的。
 
 
-TODOList：
+优化点：
 1. 多张上传
-2. 兼容性问题
+   1. 根据具体业务来说，我们做的并不是工具类的开发，所以图片上传的数量不会很多。基于此，可以限定每次选取的最大张数，比如3张，多张并发上传，性能方面应该还是可以的
+   2. 如果要实现多图(多余3张)上传，还没有思路
+2. 兼容性问题：因为主要做Hybrid APP，所以在兼容性方面没有考虑那么多，后来查can i use，发现兼容性的问题还挺麻烦的，框架拖多了，技术渣的不行。。。
